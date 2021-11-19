@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<script>(()=>{"use strict";var e={775:(e,t,n)=>{Object.defineProperty(t,"__esModule",{value:!0});const i=n(484);var o;!function(e){e[e.USER_REQUEST_REJECTED=4001]="USER_REQUEST_REJECTED",e[e.UNAUTHORIZED=4100]="UNAUTHORIZED",e[e.UNSUPPORTED_METHOD=4200]="UNSUPPORTED_METHOD",e[e.DISCONNECTED=4900]="DISCONNECTED",e[e.CHAIN_DISCONNECTED=4901]="CHAIN_DISCONNECTED"}(o||(o={})),Error;class s extends EventTarget{constructor(){super(...arguments),this.isMetaMask=!0,this.isWombat=!0,this._isConnected=!1,this.networkVersion="1",this.chainId="1",this.selectedAddress=null,this.initializeProvider=async()=>{const{accounts:e,chainId:t}=await this.rpcRequest("wombat_getProviderState");this.selectedAddress=e[0],this.chainId=this.networkVersion=t,this.setIsConnected(!0)},this.request=e=>this.rpcRequest(e.method,e.params),this.rpcRequest=(e,t)=>i.sendToContentScript({type:4,method:e,params:t,origin:document.location.host}),this.on=(e,t)=>{this.addEventListener(e,t)},this.removeListener=(e,t)=>{this.removeEventListener(e,t)}}isConnected(){return this._isConnected}setIsConnected(e){this._isConnected=e}enable(){return this.rpcRequest("eth_requestAccounts",[])}sendAsync(e,t){this.rpcRequest(e.method,e.params).then((n=>{const i={jsonrpc:"2.0",id:e.id,result:n};t(null,i)})).catch((n=>{const i={jsonrpc:"2.0",id:e.id,error:{code:n.code||1011,message:n.message}};t(i)}))}send(e,t){if("string"==typeof e&&(!t||Array.isArray(t)))return new Promise(((t,n)=>{this.rpcRequest(e).then((e=>{t(e)}))}));if(e&&"object"==typeof e&&"function"==typeof t){const n=e;this.rpcRequest(n.method,n.params).then((e=>{const i={jsonrpc:"2.0",id:n.id,result:e};t(null,i)})).catch((e=>{const i={jsonrpc:"2.0",id:n.id,error:{code:e.code||1011,message:e.message}};t(i)}))}}}const r=new s,a={currentProvider:r},c=window;c.web3=a,c.ethereum=r,window.onload=()=>{try{window.ethereum.initializeProvider()}catch(e){console.error("something went wrong ",e)}},document.dispatchEvent(new Event("ethereum#initialized"))},879:(e,t,n)=>{Object.defineProperty(t,"__esModule",{value:!0});const i=n(484);let o=!1;function s(e){const t=new Uint8Array(e.length/2);for(let n=0;n<e.length;n+=2)t[n/2]=parseInt(e.substr(n,2),16);return t}function r(e){async function t(t){const n=t.buf.toString("hex",32,t.buf.length-32),o=await i.sendToContentScript({type:1,chainId:e.network.chainId,serializedTx:n,modifiable:!0,origin:document.location.host});return o.modified&&t.transaction.actions.unshift({account:"genialwombat",name:"noop",data:{},authorization:[{actor:"wombatresmgr",permission:"cosign"}]}),o.signatures}e.identity=null,e.isExtension=!0,e.isConnected=()=>!0,e.requiredVersion="",e.getVersion=()=>Promise.resolve("10.1.12"),e.publicKey="",e.network={chainId:"aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906",host:"localhost",blockchain:"eos",port:80,protocol:"http",httpEndpoint:"http://localhost"},e.connect=(t,n)=>(n&&n.network&&(e.network=n.network),Promise.resolve(!0)),e.getIdentity=async t=>{const n=t?t.accounts[0].chainId:e.network.chainId;return e.identity=await i.sendToContentScript({type:0,chainId:n}),e.identity},e.login=e.getIdentity,e.account=()=>e.identity?e.identity.accounts[0]:null,e.getIdentityFromPermissions=()=>e.identity?Promise.resolve(e.identity):e.getIdentity(),e.checkLogin=e.getIdentityFromPermissions,e.forgetIdentity=()=>(e.identity=null,Promise.resolve(!0)),e.logout=e.forgetIdentity,e.getPublicKey=()=>e.identity?Promise.resolve(e.identity.publicKey):Promise.resolve(),e.requireVersion=t=>{e.requiredVersion=t},e.useIdentity=t=>{e.identity=t},e.suggestNetwork=()=>Promise.resolve(!0),e.signProvider=t,e.hookProvider=(t,n,o)=>({requiredFields:{},getAvailableKeys(){if(e.identity){const t=[e.identity.publicKey];return e.identity.accounts.length>1&&t.push(e.identity.accounts[1].publicKey),Promise.resolve(t)}return Promise.resolve([])},async sign(e){let{serializedTransaction:t}=e;t instanceof Uint8Array&&(t=t.reduce(((e,t)=>e+t.toString(16).padStart(2,"0")),""));const n=await i.sendToContentScript({type:1,chainId:e.chainId,serializedTx:t,modifiable:o||!1,origin:document.location.host});return o?n.modified?{serializedTransaction:s(n.signedTx),signatures:n.signatures}:{serializedTransaction:s(t),signatures:n.signatures}:n.signatures}}),Object.defineProperty(e,"eosHook",{get:()=>e.hookProvider,set:()=>!0}),e.eosMultiHook=(t,n)=>{const i=[e.hookProvider(t)].concat(n);return{getAvailableKeys:async()=>Promise.all(i.map((e=>e.getAvailableKeys()))).then((e=>e.flat())),sign:async e=>({signatures:(await Promise.all(i.map((async n=>n.sign({abis:e.abis,chainId:t.chainId,requiredKeys:await n.getAvailableKeys(),serializedTransaction:e.serializedTransaction}).then((e=>Array.isArray(e)?e:e.signatures)))))).flat(),serializedTransaction:e.serializedTransaction})}},e.eos=(n,i,o,s)=>{if(o&&o.rpc){const t=e.hookProvider(n,{},o.beta3||!0);return new i(Object.assign(o,{signatureProvider:t}))}{o=o||{},e.network=Object.assign(e.network,n),n.protocol||(n.protocol=s||"http");const r=n.protocol+"://"+n.host+":"+n.port,a=n.chainId;return i(Object.assign(o,{httpEndpoint:r,chainId:a,signProvider:t}))}},e.getArbitrarySignature=(t,n)=>i.sendToContentScript({type:2,data:n,chainId:e.network.chainId,origin:document.location.host}),e.authenticate=(t,n)=>i.sendToContentScript({type:3,nonce:t,data:n,chainId:e.network.chainId,origin:document.location.host})}if(!o){if(window.ScatterJS)r(window.ScatterJS.scatter);else{let e;Object.defineProperty(window,"ScatterJS",{get:()=>e,set(t){t&&r(t.scatter),e=t}})}const e={};r(e),window.scatter=e,document.dispatchEvent(new CustomEvent("scatterLoaded")),o=!0}},484:(e,t)=>{Object.defineProperty(t,"__esModule",{value:!0}),t.sendToContentScript=void 0,t.sendToContentScript=function(e){const t=Math.random().toFixed(10);return new Promise(((n,i)=>{document.addEventListener("wombat-comm-"+t,(e=>{const t=e.detail;t.error?i(t):n(t)}),{once:!0}),document.dispatchEvent(new CustomEvent("wombat-comm",{detail:{id:t,message:e}}))}))}}},t={};function n(i){var o=t[i];if(void 0!==o)return o.exports;var s=t[i]={exports:{}};return e[i](s,s.exports,n),s.exports}(()=>{n(775),n(879);const e=n(484);window.__wombat__={ssoAvailable:()=>Promise.resolve(!0)},window.getWombatSsoJwt=()=>e.sendToContentScript({type:5})})()})();</script><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../../../favicon.ico">
+
+    <title>Narrow Jumbotron Template for Bootstrap</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../../css/editor.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="narrow-jumbotron.css" rel="stylesheet">
+  </head>
+
+  <body><div class="header clearfix">
+        <nav>
+          <ul class="nav nav-pills float-right">
+            <li class="nav-item">
+              
+            </li>
+            <li class="nav-item">
+              
+            </li>
+            <li class="nav-item">
+              
+            </li>
+          </ul>
+        </nav>
+        <h6 class="text-muted" style="color: rgb(255, 255, 255); line-height: 27px;"><div><br><div style="float: left; position: static; top: 2px; display: inline-block; text-decoration-line: none; font-weight: 700; color: rgb(58, 148, 230); font-family: &quot;Arial Black&quot;, Gadget, sans-serif;">Internet Server Cloud Coin</div></div></h6>
+      </div>
+
+    <div class="container">
+      
+
+      <div class="jumbotron" style="line-height: 22px;"><h1 style="font-weight: 700; font-family: &quot;Brush Script MT&quot;, sans-serif; line-height: 44px; letter-spacing: 1px; color: rgb(68, 148, 230);"><b>Let's Make Better Life With New Currency&nbsp;</b></h1>
+        <h1 class="display-3" style="line-height: 20px; font-weight: 700; font-family: Arial, Helvetica, sans-serif; text-align: center;"></h1>
+        <p class="lead">Cras justo odio, dapibus ac facilisis in, egestas eget quam. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
+        <p><a class="btn btn-lg btn-success" href="wa.me/60895414030607" role="button">Sign up today</a></p>
+      </div>
+
+      <div class="row marketing">
+        <div class="col-lg-6">
+          <h4 style=""><b style="color: rgb(65, 148, 230);">Best Partner For Learn and Buy or Sell Cryptocurrency</b></h4>
+          <p>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</p>
+
+          <h4 style="color: rgb(58, 148, 230);"><b>Find your own unique digital rarity</b></h4>
+          <p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet fermentum.</p>
+
+          <h4 style="color: rgb(58, 148, 230);"><b>Secure, low cost, and eco-friendly</b></h4>
+          <p>Maecenas sed diam eget risus varius blandit sit amet non magna.</p>
+        </div>
+
+        <div class="col-lg-6">
+          <h4><b style="color: rgb(65, 148, 230);">The Easiest Way to Track Multiple Currencies</b></h4>
+          <p>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</p>
+
+          <h4>Subheading</h4>
+          <p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet fermentum.</p>
+
+          <h4>Subheading</h4>
+          <p>Maecenas sed diam eget risus varius blandit sit amet non magna.</p>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <p>© Company 2017</p>
+      </footer>
+
+    </div> <!-- /container -->
+  
+
+<script id="chartjs-script" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js"></script><script>				$(document).ready(function() {					$(".chartjs").each(function () {						ctx = $("canvas", this).get(0).getContext("2d");						config = JSON.parse(this.dataset.chart);						chartjs = new Chart(ctx, config);					});				});			  </script></body>
+</html>
