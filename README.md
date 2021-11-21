@@ -1,1 +1,4 @@
-# raptoreum-script-ubuntu script by https://github.com/doktor83/
+Raptoreum Script For Linux 
+
+
+script by https://github.com/doktor83/
